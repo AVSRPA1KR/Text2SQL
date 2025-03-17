@@ -5,6 +5,7 @@ import com.bits.rag.dto.ColumnResult;
 import com.bits.rag.dto.SearchRequest;
 import com.bits.rag.dto.SearchResult;
 import com.bits.rag.dto.TableResult;
+import com.bits.rag.service.SQLGenerationService;
 import com.bits.rag.service.EmbeddingService;
 import com.bits.rag.service.JdbcSearchService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class SearchController {
 
     private final JdbcSearchService jdbcSearchService;
     private final EmbeddingService embeddingService;
+    private final SQLGenerationService sqlGenerationService;
 
     @PostMapping("/search")
     public ResponseEntity<Map<String, Object>> search(@RequestBody SearchRequest request) {
@@ -34,9 +36,11 @@ public class SearchController {
         float[] embedding = embeddingService.generateEmbedding(request.query());
 
         tables = jdbcSearchService.searchTables(request.query(), embedding, request.searchType(), request.topK());
-        columns = jdbcSearchService.searchColumns(request.query(), embedding, request.searchType(), 2);
+        columns = jdbcSearchService.searchColumns(request.query(), embedding, request.searchType(), request.topK()* request.topK());
 
-        return ResponseEntity.ok(new SearchResult(tables, columns).toResponseMap());
+        String sqlGenerated = sqlGenerationService.generateSql(request.query(),tables, columns);
+
+        return ResponseEntity.ok(new SearchResult(tables, columns, sqlGenerated).toResponseMap());
     }
 
 

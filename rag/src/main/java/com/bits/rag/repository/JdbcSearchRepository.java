@@ -60,27 +60,27 @@ public class JdbcSearchRepository {
                                     SearchRequest.SearchType searchType) {
         return switch (searchType) {
             case KEYWORD -> """
-                SELECT * FROM %s
-                ORDER BY ts_rank_cd(
-                    to_tsvector('english', %s), 
-                    plainto_tsquery('english', ?)
-                ) DESC
-                LIMIT ?
-                """.formatted(tableName, String.join(" || ' ' || ", searchFields));
+            SELECT * FROM %s
+            ORDER BY ts_rank_cd(
+                to_tsvector('english', %s), 
+                websearch_to_tsquery('english', ?)
+            ) DESC
+            LIMIT ?
+            """.formatted(tableName, String.join(" || ' ' || ", searchFields));
 
             case SEMANTIC -> """
-                SELECT * FROM %s
-                ORDER BY (embedding <=> ?) ASC
-                LIMIT ?
-                """.formatted(tableName);
+            SELECT * FROM %s
+            ORDER BY (embedding <=> ?) ASC
+            LIMIT ?
+            """.formatted(tableName);
 
             case HYBRID -> """
-                SELECT * FROM %s
-                ORDER BY (0.7 * (1 - (embedding <=> ?)) + 
-                     0.3 * ts_rank_cd(to_tsvector('english', %s), 
-                                    plainto_tsquery('english', ?))) DESC
-                LIMIT ?
-                """.formatted(tableName, String.join(" || ' ' || ", searchFields));
+            SELECT * FROM %s
+            ORDER BY (0.5 * (1 - (embedding <=> ?)) + 
+                 0.5 * ts_rank_cd(to_tsvector('english', %s), 
+                                websearch_to_tsquery('english', ?))) DESC
+            LIMIT ?
+            """.formatted(tableName, String.join(" || ' ' || ", searchFields));
         };
     }
 

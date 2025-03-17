@@ -7,9 +7,12 @@ public class SearchResult {
     private List<TableResult> tables;
     private List<ColumnResult> columns;
 
-    public SearchResult(List<TableResult> tables, List<ColumnResult> columns){
+    private String sqlGenerated;
+
+    public SearchResult(List<TableResult> tables, List<ColumnResult> columns, String sqlGenerated){
         this.tables = tables;
         this.columns = columns;
+        this.sqlGenerated = sqlGenerated;
     }
 
     public Map<String, Object> toResponseMap() {
@@ -47,6 +50,7 @@ public class SearchResult {
                 .collect(Collectors.toList());
 
         response.put("tables", structuredTables);
+        response.put("response", sqlGenerated);
         return response;
     }
 
